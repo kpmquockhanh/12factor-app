@@ -8,8 +8,8 @@ Trong thời đại hiện đại, phần mềm thường được cung cấp d�
 * Sử dụng định dạng **declarative** để tự động thiết lập, để giảm thiểu thời gian và chi phí cho các nhà phát triển mới tham gia dự án;
 * Có một **kí kết rõ ràng** với hệ điều hành cơ bản, cung cấp **tối đa tính di động** giữa các môi trường thực thi;
 * Phù hợp cho viẹc **triển khai** trên **các nền tẳng đám mây** hiện đại, thực sự cần thiết cho các máy chủ và quản trị hệ thống;
-* **Tối thiểu sự khác nhau** giữa phát triển và sản xuất, cho phép **tiếp tục triển khai** một cách linh hoạt nhất;
-* Và có thể **mở rộng quy mô** mà không cần có thay đổi đáng kể về công cụ, kiến trúc hoặc phát triển thwujc tiễn.
+* **Giảm thiểu tối đa sự khác nhau** giữa phát triển và sản phẩm, cho phép **triển khai liên tục** một cách linh hoạt nhất;
+* Và có thể **mở rộng quy mô** mà không cần có thay đổi đáng kể về công cụ, kiến trúc hoặc phát triển thực tiễn.
 
 Phương pháp 12-factor có thể được áp dụng cho các ứng dụng được viết bằng bất kỳ ngôn ngữ lập trình nào và sử dụng bất kỳ kết hợp dịch vụ sao lưu nào (cơ sở dữ liệu, hàng đợi, bộ nhớ cache, v.v.).
 
