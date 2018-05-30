@@ -1,0 +1,106 @@
+
+[Source](https://12factor.net/backing-services "Permalink to The Twelve-Factor App")
+
+# The Twelve-Factor App
+
+## IV. Dịch vụ sao lưu
+
+### Coi các dịch vụ sao lưu như các tài nguyên đi kèm
+
+Một _dịch vụ sao lưu_ là bất kì dịch vụ nào mà các ứng dụng sử dụng nó như 1 phần của quá trính vận hành thông thường của nó . Các ví dụ bao gồm các kho dưx liệu (như là [MySQL][1] hay [CouchDB][2]), các hệ thống thông báo/hàng đợi (như là [RabbitMQ][3] or [Beanstalkd][4]), các dịch vụ SMTP cho việc gửi email đi (như là [Postfix][5]), và hệ thống bộ nhớ đệm (như là [Memcached][6]).
+
+Dịch vụ sao lưu giống như cơ sở dữ liệu được quản lý theo truyền thống bởi các quản trị viên hệ thống như việc triển khai theo thời gian chạy của ứng dụng. Ngoài các dịch vụ được quản lý cục bộ này, ứng dụng cũng có thể có các dịch vụ do bên thứ ba cung cấp và quản lý. Các ví dụ bao gồm các dịch vụ SMTP (như là [Postmark][7]), dịch vụ thu thập dữ liệu (như là [New Relic][8] hay [Loggly][9]), dịch vụ sở hữu nhị phân (như là [Amazon S3][10]), và thậm chí cả các dịch vụ cho người dùng có thể truy cập API(như là [Twitter][11], [Google Maps][12], hay [Last.fm][13]).
+
+**Code cho ứng dụng theo 12-chuẩn không phân biệt các dịch vụ cục bộ hay là bên thứ ba.** Đối với ứng dụng, cả 2 đều là các nguồn đi kèm, được truy cập thông qua 1 URL hay các định vị/ thông tin xác thực khác được lưu trữ trong [cấu hình][14]. Một [triển khai][15] của 12-chuẩn có thể hoán đổi cơ sở dữ liệu MySQL cục bộ với cơ sở dữ liệu do bên thứ ba quản lý (như là [Amazon RDS][16]) mà không thay đổi code. Tương tự, 1 máy chủ SMTP cục bộ có thể được tráo đổi với 1 dịch vụ SMTP bên thứ ba (như Postmark) mà không phải thay đổi code. Trong cả 2 trường hợp, chỉ có các tài nguyên được xử lý trong cấu hình cần được thay đổi.
+
+Mỗi dịch vụ sao lưu riêng biệt là một _tài nguyên_.  Ví dụ, 1 cơ sở dữ liệu MySQL là 1 tài nguyên, 2 cơ sở dữ liệu MySQL ( sử dụng song song tại tầng ứng dụng) được coi là 2 tài nguyên riêng biệt. Ứng dụng theo 12-chuẩn coi các cơ sở dữ liệu này như là các tài nguyên đi kèm, chỉ định kết nối lỏng lẻo của chúng với triển khai mà chúng đi kèm.
+
+![A production deploy attached to four backing services.][17]
+
+Tài nguyên có thể được gắn vào và tách ra khỏi các triển khai theo ý muốn. Ví dụ: nếu cơ sở dữ liệu của ứng dụng bị lỗi do sự cố phần cứng, quản trị viên của ứng dụng có thể chuyển sang máy chủ cơ sở dữ liệu mới được khôi phục từ bản sao lưu gần đây. Cơ sở dữ liệu production hiện tại có thể được gỡ bỏ, và thay thế bởi cơ sở dữ liệu mới được thêm vào - tất cả đều không yêu cầu bất kỳ sự thay đổi nào về code.
+## V. Build, release, run
+
+### Các giai đoạn xây dựng và chạy hoàn toàn riêng biệt
+
+Một [codebase][1] được chuyển thành một (non-development) triển khai qua 3 giai đoạn:
+
+* _Giai đoạn xây dựng_ là 1 quá trình chuyển đổi mà chuyển 1 code repo thành 1 gói thực thi, được biết như là 1 kiến trúc. Sử dụng 1 phiên bản code tại 1 commit cụ thể qua quá trình triển khai, bước xây dựng sẽ lấy các phụ thuộc vendors và biên dịch các file nhị phân và asset.
+* _Giai đoạn xuất bản_ lấy kiến trúc được tạo từ giai đoạn xây dựng và ghép chúng với cấu hình triển khai hiện tại. Kết quả xuất bảo sẽ bảo gồm cả kiến trúc và cấu hình và sẵn sáng để thực thi ngay lập tức trong môi trường thực thi.
+* _Giai đoạn chạy_ (hay còn là "thời gian chạy") chạy ứng dụng trong môi trường thực thi, bằng cách xuất 1 tập các tiến trình của ứng dụng với 1 xuất bản được chọn.
+
+![Code becomes a build, which is combined with config to create a release.][5]
+
+**Ứng dụng theo 12 chuẩn sử dụng tách biệt rõ ràng giữa các giai đoạn xây dựng, xuất bản và chạy.** Ví dụ, ta không sửa đổi code trong thời gian chạy, vì ta không có cách nào để truyền những thay đổi đó trở về giai đoạn xây dựng cả.
+
+Các công cụ triển khai thường cung cấp các công cụ quản lý phát hành, đáng chú ý nhất là khả năng quay lại bản phát hành trước. Ví dụ, Côn cụ triển khai [Capistrano][6] lưu trữ bản phát hành trong một thư mục con có tên `releases`, nơi bản phát hành hiện tại là một liên kết tượng trưng đến thư mục bản phát hành hiện tại. Lệnh `rollback` của nó giúp bạn dễ dàng quay lại bản phát hành trước
+
+Mọi bản phát hành phải luôn có ID phát hành duy nhất, chẳng hạn như dấu thời gian của bản phát hành (chẳng hạn như `2011-04-06-20: 32: 17`) hoặc số tự tăng (chẳng hạn như` v100`). Các bản phát hành là một bản chỉ nối phụ thêm và một bản phát hành không thể bị biến đổi khi nó được tạo ra. Bất kì thay đổi nào đều phải tạo bản phát hành mới.
+
+Xây dựng được khởi tạo bởi nhà phát triển ứng dụng khi code mới được triển khai. Ngược lại,  thời gian thực thi có thể tự động chạy trong các trường hợp như khởi động lại máy chủ hoặc quá trình bị lỗi được khởi động lại bởi trình quản lý. Do đó, giai đoạn chạy nên được giữ cho ít phần di chuyển nhất có thể, vì các vấn đề ngăn ứng dụng chạy có thể làm cho ứng dụng ngừng hoạt động vào giữa đêm khi không có nhà phát triển nào ở đó. Giai đoạn xây dựng có thể phức tạp hơn, vì các lỗi luôn luôn ở phía trước khi một nhà phát triển đang thực hiện triển khai.
+## VI. Processes
+
+### Thực thi ứng dụng dưới dạng một hoặc nhiều quy trình không trạng thái
+
+Ứng dụng được thực thi trong môi trường thực thi dưới dạng một hoặc nhiều _tiến trình_.
+
+Trong trường hợp đơn giản nhất, code là một tập lệnh độc lập, môi trường thực thi là máy tính xách tay cục bộ của nhà phát triển với thời gian chạy ngôn ngữ đã được cài đặt và quá trình được khởi chạy qua dòng lệnh (ví dụ, `python my_script.py`). Mặt khác, triển khai sản xuất của một ứng dụng tinh vi có thể sử dụng nhiều [các kiểu tiến trình, được khởi tạo thành 0 hoặc nhiều quy trình đang chạy][1].
+
+**Quy trình mười hai yếu tố là không có trạng thái và [không chia sẻ][2].** Bất kỳ dữ liệu nào cần phải tồn tại phải được lưu trữ trong trạng thái [dịch vụ sao lưu][3], thường là một cơ sở dữ liệu.
+
+Bộ nhớ hoặc filesystem của tiến trình có thể được sử dụng như là 1 tóm tắt, 1 bộ nhớ đệm đơn-chiều. Ví dụ, tải 1 file lớn, nghiên cứu nó, và lưu các kết quả của sự nghiên cứu trong cơ sởở dữ liệu. Ứng dụng theo 12-chuẩn không bao giờ giả định bất cứ thứ gì được cache trong bộ nhớ hay trên đĩa sẽ khả dụng trong 1 yêu cầu hay công việc trong tương lai - với nhiều tiến trình mỗi loại đang chạy, cơ hội cho 1 yêu cầu trong tương lai được phục vụ bởi 1 tiến trình khác là cao. Thậm chí ngay cả khi đang chạy duy nhất 1 tiến trình, 1 khởi động lạiại ( bắt nguồn từ triển khai code, thay đổi cấu hình hay môi trường thực thi chuyển tiến trình sang 1 ví trí vật lí khác) thường xóa sạch tất cả trạng thái cục bộ ( bộ nhớ và filesystem).
+
+Các đóng gói asset như django-asetpackager sử dụng filesystem như là bộ nhớ đệm cho các asset được biên dịch. Một ứng dụng tuân theo bộ 12 quy chuẩn có xu hướng thực hiện việc biên dịch này trong suốt giai đoạn xây dựng. Các trình đóng gói asset như Jammit và asset pipeline Rails có thể được cấu hình thành các asset package trong giai đoạn xây dựng.
+
+Một vài hệ thống web phụ thuộc vào các “sticky sessions” - đó là việc caching các dữ liệu của phiên của người trong bộ nhớ của tiến trình của ứng dụng và đợi các yêu cầu trong tương lai đền từ cùng một người sẽ được điều hướng tới cùng một tiến trình. Sticky sesions là một vi phạm của bộ 12 quy chuẩn và không bao giờ nên sử dụng hoặc phụ thuộc vào nó. Các dữ liệu trang thái phiên là một gỉai pháp thay thế tốt cho các kho dữ liệu mà trong hệ thống có quy định giới hạn về thời gian, như là Memcaches hay Redis.
+
+## VII. Ràng buộc cổng
+
+### Xuất dịch vụ qua cổng ràng buộc
+
+Các ứng dụng web đôi khi được thực hiện bên trong máy chủ web. Ví dụ: các ứng dụng PHP có thể chạy dưới dạng mô-đun bên trong [Apache HTTPD][1], hoặc java có thể chạy trong [Tomcat][2].
+
+**Ứng dụng mười hai yếu tố hoàn toàn khép kín** và không phụ thuộc vào các đơn ảnh thời gian chạy của 1 webserver vào môi trường thực thi để tạo 1 dịch vụ web-facing. Ứng dụng web xuất HTTP như 1 dịch vụ bằng cách ràng buộc với 1 cổng, và nghe các yêu cầu tới từ cổng đó.
+
+Trong môi trường phát triển cục bộ, nhà phát triển truy cập URL dịch vụ như `http: // localhost: 5000 /` để truy cập dịch vụ được xuất bởi ứng dụng của họ. Trong triển khai, một lớp định tuyến xử lý các yêu cầu định tuyến từ một tên máy chủ đang đối mặt với các quy trình web ràng buộc cổng.
+
+nó thường được thực thi bằng cách sử dụng [khai báo phụ thuộc][3] để thêm thư viện máy chủ web vào ứng dụng, như là [Tornado][4] cho Python, [Thin][5] cho Ruby, hay [Jetty][6] cho Java và các ngôn ngữ dựa trên môt trường phát triển khác. Điều này xảy ra hoàn toàn trong _user space_, nghĩa là, trong code của ứng dụng. Liên hệ với môi trường thực thi được ràng buộc với một cổng để phục vụ các yêu cầu.
+
+HTTP không phải dịch vụ duy nhất có thể được xuất bằng ràng buộc cổng. Gần đây thì bất kỳ loại phần mềm máy chủ nào đều có thể chạy thông qua 1 tiến trình ràng buộc với 1 cổng và đợi các yêu cầu đến. Các ví dụ bao gồm ejabberd ( gọi XMPP), và Redis (gọi giao thức Redis).
+
+Cũng lưu ý rằng các tiếp cận ràng-buộc-cổng có nghĩa là 1 ứng dụng có thể trở thành 1 dịch vụ nền cho 1 ứng dụng khác, bằng cách cung cấp URL đến ứng dụng nền như 1 xử lý tài nguyên trong cấu hình cho ứng dụng sử dụng.
+
+## VIII. Xử lí đồng thời
+
+### Mở rộng quy mô thông qua mô hình quy trình
+
+Bất kỳ chương trình máy tính nào, sau khi chạy, được thể hiện bằng một hoặc nhiều quy trình. Các ứng dụng web đã thực hiện một loạt các biểu mẫu thực thi quy trình. Ví dụ, các tiến trình PHP chạy như các tiến trình con của Apache, bắt đầu theo yêu cầu khi cần bằng khối lượng yêu cầu. Các quy trình Java có cách tiếp cận ngược lại, với JVM cung cấp một tiến trình nền tảng công nghệ khổng lồ để dự trữ một khối lớn tài nguyên hệ thống (CPU và bộ nhớ) khi khởi động, đồng thời được quản lý nội bộ thông qua các luồng. Trong cả hai trường hợp, (các) tiến trình đang chạy chỉ hiển thị tối thiểu cho các nhà phát triển ứng dụng.
+
+![Scale is expressed as running processes, workload diversity is expressed as process types.][1]
+
+**Trong ứng dụng mười hai yếu tố, quy trình là các lớp đầu tiên.** Các tiến trình trong ứng dụng theo 12 chuẩn tuân theo mô hình tiến trình unix để chạy các daemon(chương trình chạy nền) dịch vụ. Sử dụng môô hình này, người phát triển có thể thiết kế ứng dụng của họ để xử lý các khối lượng công việc khác nhau bằng cách giao mỗi loại công việc cho 1 loại tiến trình. Ví dụ các yêu cầu HTTP có thể được xử lý bằng 1 tiến trình web, và các nhiệm vụ nền chạy dài được xử lý bởi các tiến trình worker.
+
+Điều này không loại trừ các quy trình riêng lẻ xử lý ghép nội bộ của riêng chúng, thông qua các luồng bên trong thời gian chạy VM hoặc mô hình async / evented được tìm thấy trong các công cụ như [EventMachine][3], [Twisted][4] hoặc [Node.js ][5]. Nhưng một máy ảo cá nhân chỉ có thể phát triển quá lớn (quy mô theo chiều dọc), vì vậy ứng dụng cũng phải có khả năng mở rộng nhiều quy trình chạy trên nhiều máy vật lý.
+
+Mô hình tiến trình thực sự hiệu quả khi ta quan tâm đến vấn đề mở rộng. Nguyên tắc không chia sẻ, có thể phân chia theo chiều ngang của các tiến tình tuân theo bộ 12 quy chuẩn có nghĩa là thêm nhiều xử lý đồng thời là một hoạt động đơn giản và đáng tin cậy, ổn định. Mảng các loại tiến trình và số lượng tiến trình của mỗi loại được gọi là hệ thống tiến trình.
+
+Các tiến trình theo 12-chuẩn không bao giờ nên chạy nền hóa hay viết các file PID. Thay vào đó, dựa trên quản lý tiến trình của hệ điều hành( như là systemd, 1 quản lý tiến trình phân tán trên nền tảng đám mây, hay 1 công cụ như Foreman trong phát triển) để quản lý các luồng ra, phản hồi các tiến trình hỏng, và xử lý các khởi động lại và tắt do người dùng khởi tạo.
+
+[1]: http://dev.mysql.com/
+[2]: http://couchdb.apache.org/
+[3]: http://www.rabbitmq.com/
+[4]: http://kr.github.com/beanstalkd/
+[5]: http://www.postfix.org/
+[6]: http://memcached.org/
+[7]: http://postmarkapp.com/
+[8]: http://newrelic.com/
+[9]: http://www.loggly.com/
+[10]: http://aws.amazon.com/s3/
+[11]: http://dev.twitter.com/
+[12]: https://developers.google.com/maps/
+[13]: http://www.last.fm/api
+[14]: https://12factor.net/config
+[15]: https://12factor.net/codebase
+[16]: http://aws.amazon.com/rds/
+[17]: https://12factor.net/images/attached-resources.png
+
+  
