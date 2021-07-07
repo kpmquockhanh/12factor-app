@@ -3,21 +3,26 @@
 
 # 12-Factor
 
-Trogn thời đại hiện đại, phần mềm thường được cung cấp dưới dạng dịch vụ: được gọi là _ứng dụng web_, hoặc _phần mềm dịch vụ_. 12-factor là một phương pháp để xây dựng các ứng dụng phần mềm như một dịch vụ:
+Trong thời đại hiện đại, phần mềm thường được cung cấp dưới dạng dịch vụ: được gọi là _ứng dụng web_, hoặc _phần mềm dịch vụ_. 12-factor là một phương pháp để xây dựng các ứng dụng phần mềm dưới dạng dịch vụ:
 
-* Sử dụng định dạng **declarative** để tự động thiết lập, tđể giảm thiểu thời gian và chi phí cho các nhà phát triển mới tham gia dự án;
+* Sử dụng định dạng **declarative** để tự động thiết lập, để giảm thiểu thời gian và chi phí cho các nhà phát triển mới tham gia dự án;
 * Có một **kí kết rõ ràng** với hệ điều hành cơ bản, cung cấp **tối đa tính di động** giữa các môi trường thực thi;
 * Phù hợp cho viẹc **triển khai** trên **các nền tẳng đám mây** hiện đại, thực sự cần thiết cho các máy chủ và quản trị hệ thống;
-* **Tối thiểu sự khác nhau** giữa phát triển và sản xuất, cho phép **tiếp tục triển khai** một cách linh hoạt nhất;
-* Và có thể **mở rộng quy mô** mà không cần có thay đổi đáng kể về công cụ, kiến trúc hoặc phát triển thwujc tiễn.
+* **Giảm thiểu tối đa sự khác nhau** giữa phát triển và sản phẩm, cho phép **triển khai liên tục** một cách linh hoạt nhất;
+* Và có thể **mở rộng quy mô** mà không cần có thay đổi đáng kể về công cụ, kiến trúc hoặc phát triển thực tiễn.
 
 Phương pháp 12-factor có thể được áp dụng cho các ứng dụng được viết bằng bất kỳ ngôn ngữ lập trình nào và sử dụng bất kỳ kết hợp dịch vụ sao lưu nào (cơ sở dữ liệu, hàng đợi, bộ nhớ cache, v.v.).
+
+## Background
 
 Những người đóng góp cho tài liệu này đã trực tiếp tham gia vào việc phát triển và triển khai hàng trăm ứng dụng, và gián tiếp chứng kiến sự phát triển, vận hành và mở rộng hàng trăm nghìn ứng dụng thông qua công việc của chúng tôi trên nền tảng [Heroku][1].
 
 Tài liệu này tổng hợp tất cả các kinh nghiệm và quan sát của chúng tôi về một loạt các ứng dụng phần mềm như một dịch vụ trong tự nhiên. Nó là một triangulation trên ý tưởng thực hành cho phát triển ứng dụng, đặc biệt chú ý đến động lực của sự phát triển của ứng dụng theo thời gian, ttính linh hoạt của sự cộng tác giữa các nhà phát triển làm việc trên codebase của ứng dụng và [tránh chi phí phát sinh của phần mềm][2].
 
 Động lực của chúng tôi là nâng cao nhận thức về một số vấn đề hệ thống mà chúng tôi đã thấy trong phát triển ứng dụng hiện đại, để cung cấp vốn từ vựng chung để thảo luận những vấn đề đó và cung cấp một loạt giải pháp khái niệm cho những vấn đề kèm theo những thuật ngữ. Định dạng được lấy cảm hứng từ sách của Martin Fowler [_Các mẫu của kiến trúc ứng dụng doanh nghiệp][3]_ and [Tái cấu trúc][4]_.
+
+## Ai nên đọc tài liệu này?
+Bất kỳ nhà phát triển nào xây dựng phần mềm dưới dạng dịch vụ. Các kỹ sư triển khai hoặc quản lý các ứng dụng như vậy.
 
 ## I. Codebase
 
@@ -36,7 +41,7 @@ Luôn có mối tương quan một-một giữa codebase và ứng dụng:
 
 Chỉ có duy nhất 1 codebase trên một app, nhưng có thể có nhiều triển khai trên app đó. Một _triển khai_ ilà một phiên bản đang chạy của ứng dụng. Đây thường là một trang web sản xuất và một hoặc nhiều trang web dàn dựng. Ngoài ra, mọi nhà phát triển đều có một bản sao của ứng dụng đang chạy trong môi trường phát triển cục bộ của họ, mỗi một trong số đó cũng đủ điều kiện để triển khai.
 
-Ví dụ, một nhà phát triển có một số commit chưa triển khai để dàn dựng; dàn dựng có một số commit chưa được triển khai để sản xuất. Nhưng tất cả đều chia sẻ cùng một codebase, do đó làm cho chúng có thể nhận dạng như các triển khai khác nhau của cùng một ứng dụng.
+Ví dụ, một nhà phát triển có một số commit chưa triển khai để dàn dựng; dàn dựng có một số commit chưa được triển khai thành sản phẩm. Nhưng tất cả đều chia sẻ cùng một codebase, do đó làm cho chúng có thể nhận dạng như các triển khai khác nhau của cùng một ứng dụng.
 
 ## II. Các phụ thuộc
 
@@ -44,11 +49,11 @@ Ví dụ, một nhà phát triển có một số commit chưa triển khai đ�
 
 Hầu hết các ngôn ngữ lập trình đều cung cấp hệ thống đóng gói để phân phối các thư viện hỗ trợ, chẳng hạn như [CPAN][1] cho Perl hoặc [Rubygems][2] cho Ruby. Thư viện được cài đặt thông qua hệ thống đóng gói có thể được cài đặt trên toàn hệ thống (được gọi là "gói trang web") hoặc được đưa vào thư mục chứa ứng dụng (được biết đến như là  "vendoring" hoặc "bundling").
 
-**Một 12-factor không bao giờ dựa vào sự tồn tại tiềm ẩn của các gói hệ thống.** Nó khai báo tất cả các phụ thuộc, hoàn toàn và chính xác, qua một _khai bóa phụ thuộc_. Hơn thế nữa, nó sử dụng  một  công cụ _phụ thuộc tách biệt_ trong khi thực hiện để đảm bảo rằng không có phụ thuộc ngầm "rò rỉ" ftừ hệ thống xung quanh. Đặc tả phụ thuộc đầy đủ và rõ ràng được áp dụng thống nhất cho cả sản xuất và phát triển.
+**Một ứng dụng chuẩn 12-yếu tố không bao giờ dựa vào sự tồn tại tiềm ẩn của các gói hệ thống.** Nó khai báo tất cả các phụ thuộc, hoàn toàn và chính xác, qua một _khai bóa phụ thuộc_. Hơn thế nữa, nó sử dụng  một  công cụ _phụ thuộc tách biệt_ trong khi thực hiện để đảm bảo rằng không có phụ thuộc ngầm "rò rỉ" ftừ hệ thống xung quanh. Đặc tả phụ thuộc đầy đủ và rõ ràng được áp dụng thống nhất cho cả sản xuất và phát triển.
 
 Ví dụ, [Bundler][3] cho Ruby cung cấp định  dạng `Gemfile` cho khai báo phụ thuộc và `bundle exec` cho phụ thuộc tách biệt. Trong Python có hai công cụ riêng biệt cho các bước này – [Pip][4] được sử dụng để khai báo và [Virtualenv][5] cho phân tách. Thậm chí C có [Autoconf][6] để khai báo phụ thuộc, và liên kết tĩnh có thể cung cấp sự phân tách phụ thuộc. Bất kể dùng tập công cụ nào, khai báo và tách biệt phụ thuộc luôn phải được sử dụng cùng nhau - chỉ một là không đủ để thỏa mãn 12-factor.
 
-1 lợi ích của việc khai báo phụ thuộc rõ ràng là nó đơn giản hóa việc cài đặt cho những người mới phát triển ứng dụng. nhà phát triển mới có thể kiểm tra codebase của ứng dụng trên máy phát triển của họ, với điều kiện tiên quyết chỉ yêu cầu ngôn ngữữ chạy và quản lý phụ thuộc được cài đặt. Họ sẽ có thể thiết lập mọi thứ cần thiết để chạy mã của ứng dụng với _câu lẹnh xây dựng_ xác định. Ví dụ, câu lệnh xây dựng cho Ruby/Bundler là `bundle install`, trong khi đó Clojure/[Leiningen][7] là `lein deps`.
+1 lợi ích của việc khai báo phụ thuộc rõ ràng là nó đơn giản hóa việc cài đặt cho những người mới phát triển ứng dụng. nhà phát triển mới có thể kiểm tra codebase của ứng dụng trên máy phát triển của họ, với điều kiện tiên quyết chỉ yêu cầu ngôn ngữ chạy và quản lý phụ thuộc được cài đặt. Họ sẽ có thể thiết lập mọi thứ cần thiết để chạy mã của ứng dụng với _câu lẹnh xây dựng_ xác định. Ví dụ, câu lệnh xây dựng cho Ruby/Bundler là `bundle install`, trong khi đó Clojure/[Leiningen][7] là `lein deps`.
 
 12-factor  cũng không phụ thuộc vào các tồn tại ngầm của bất kỳ hệ thống công cụ nào. Ví dụ bao gồm cả với ImageMagick hay `curl`.Mặc dù các công cụ này có thể tồn tại trên nhiều hoặc thậm chí hầu hết các hệ thống, không có gì đảm bảo rằng chúng sẽ tồn tại trên tất cả các hệ thống mà ứng dụng có thể chạy trong tương lai hoặc liệu phiên bản tìm thấy trên một hệ thống tương lai có tương thích với ứng dụng hay không. Nếu ứng dụng cần một công cụ hệ thống, công cụ đó cần được đưa vào ứng dụng.
 
